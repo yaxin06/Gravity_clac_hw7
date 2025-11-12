@@ -6,61 +6,126 @@
   <title>重力異常計算教學｜自由空間與布格改正（含 Python 程式）</title>
   <meta name="description" content="示範理論重力、自由空間改正、布格改正、自由空間重力異常與布格重力異常的完整步驟，含可複製 Python 程式碼與 (a)(b) 範例解答。">
 
+  <!-- 基礎樣式（深/淺色自適應 + 優化排版） -->
   <style>
     :root{
-      --bg:#0b1020;--panel:#12172a;--muted:#8aa0c4;--text:#e6ebff;--accent:#6aa6ff;--accent2:#8ef0ff;--code:#0e1326;
+      --bg:#0b1020;--panel:#12172a;--muted:#8aa0c4;--text:#e6ebff;
+      --accent:#6aa6ff;--accent2:#8ef0ff;--code:#0e1326;
       --good:#78e08f;--bad:#ff6b6b;--warn:#ffd86b;
+      --radius:16px;
     }
     @media (prefers-color-scheme: light){
       :root{
-        --bg:#f7f9fd;--panel:#ffffff;--muted:#4a5b7d;--text:#222a3f;--accent:#2b6ef3;--accent2:#00a6b6;--code:#0e1326;
+        --bg:#f7f9fd;--panel:#ffffff;--muted:#4a5b7d;--text:#222a3f;
+        --accent:#2b6ef3;--accent2:#00a6b6;--code:#0e1326;
       }
     }
     *{box-sizing:border-box}
-    body{margin:0;background:radial-gradient(1200px 800px at 10% -10%,#17203f,var(--bg)) fixed;color:var(--text);
-         font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Noto Sans TC,"PingFang TC","Microsoft JhengHei",Arial;
-         line-height:1.7}
+    html,body{height:100%}
+    body{
+      margin:0;
+      background:radial-gradient(1200px 800px at 10% -10%,#17203f,var(--bg)) fixed;
+      color:var(--text);
+      font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Noto Sans TC,"PingFang TC","Microsoft JhengHei",Arial;
+      line-height:1.75;
+      letter-spacing:.2px;
+      -webkit-font-smoothing:antialiased;
+      text-rendering:optimizeLegibility;
+    }
     a{color:var(--accent);text-decoration:none}
     a:hover{text-decoration:underline}
     .wrap{max-width:1200px;margin:0 auto;padding:24px}
-    header{background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.02));border:1px solid rgba(255,255,255,.08);
-           border-radius:18px;padding:26px;box-shadow:0 12px 28px rgba(0,0,0,.24)}
+    header{
+      background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.02));
+      border:1px solid rgba(255,255,255,.08);
+      border-radius:18px;padding:26px;
+      box-shadow:0 12px 28px rgba(0,0,0,.24)
+    }
     .title{font-size:clamp(28px,4vw,44px);font-weight:800;margin:6px 0}
     .sub{color:var(--muted);max-width:75ch}
     .tag{display:inline-block;border:1px solid rgba(255,255,255,.18);padding:2px 8px;border-radius:999px;color:var(--muted);font-size:12px}
     main{display:grid;grid-template-columns:280px 1fr;gap:22px;margin-top:26px}
     @media (max-width:980px){main{grid-template-columns:1fr}}
-    aside{position:sticky;top:16px;align-self:start;background:var(--panel);border:1px solid rgba(255,255,255,.08);
-          border-radius:14px;padding:14px}
+    aside{
+      position:sticky;top:16px;align-self:start;background:var(--panel);
+      border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:14px
+    }
     .toc a{display:block;padding:8px 10px;border-radius:10px;color:var(--text)}
     .toc a:hover{background:rgba(255,255,255,.05)}
     .toc a.active{background:linear-gradient(90deg,rgba(106,166,255,.18),rgba(0,0,0,0));border:1px solid rgba(106,166,255,.4)}
-    section.card{background:var(--panel);border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:20px;
-                 box-shadow:0 10px 24px rgba(0,0,0,.18)}
+    section.card{
+      background:var(--panel);border:1px solid rgba(255,255,255,.08);
+      border-radius:var(--radius);padding:20px;
+      box-shadow:0 10px 24px rgba(0,0,0,.18)
+    }
     section.card+section.card{margin-top:16px}
     h2{margin:0 0 10px;font-size:clamp(22px,2.6vw,30px)}
     h3{margin:16px 0 8px;font-size:18px}
     p{margin:8px 0}
     ul,ol{margin:8px 0 8px 22px}
-    .callout{background:rgba(255,255,255,.06);border:1px dashed rgba(255,255,255,.16);border-radius:12px;padding:10px 12px;color:var(--muted)}
-    pre{position:relative;background:var(--code);color:#e8edff;border-radius:12px;padding:12px;border:1px solid rgba(255,255,255,.08);overflow:auto}
-    code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,Monaco,"Liberation Mono",monospace;font-size:13px}
-    .copy{position:absolute;top:8px;right:8px;border:1px solid rgba(255,255,255,.15);background:#0b1020;color:#dbe4ff;
-          padding:6px 9px;border-radius:10px;font-size:12px;cursor:pointer;opacity:.9}
+    .callout{
+      background:rgba(255,255,255,.06);
+      border:1px dashed rgba(255,255,255,.16);
+      border-radius:12px;padding:10px 12px;color:var(--muted)
+    }
+    /* 程式碼區塊 */
+    pre{
+      position:relative;background:var(--code);color:#e8edff;border-radius:12px;
+      padding:12px;border:1px solid rgba(255,255,255,.08);overflow:auto
+    }
+    code{
+      font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,Monaco,"Liberation Mono",monospace;
+      font-size:13px
+    }
+    .copy{
+      position:absolute;top:8px;right:8px;border:1px solid rgba(255,255,255,.15);
+      background:#0b1020;color:#dbe4ff;padding:6px 9px;border-radius:10px;
+      font-size:12px;cursor:pointer;opacity:.9
+    }
     .copy:hover{opacity:1}
+    /* 公式美化：讓 MathJax 區塊有更好的行高與間距 */
+    .eq{margin:10px 0;padding:8px 10px;border-left:3px solid rgba(106,166,255,.6);background:rgba(255,255,255,.04);border-radius:8px}
+    .eq.center{display:block;text-align:center}
+    .units{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,Monaco,"Liberation Mono",monospace;}
+    /* KPI 小卡 */
     .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
     @media (max-width:720px){.grid3{grid-template-columns:1fr}}
     .kpi{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:10px}
     .kpi .n{font-weight:800}
     footer{color:var(--muted);text-align:center;padding:28px 0}
   </style>
+
+  <!-- Prism.js（程式碼語法上色） -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/themes/prism-tomorrow.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-core.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/plugins/autoloader/prism-autoloader.min.js"
+          data-autoloader-path="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/"></script>
+
+  <!-- MathJax v3（LaTeX 公式渲染，修正任何/與上標亂碼問題） -->
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [['\\(','\\)'], ['$', '$']],
+        displayMath: [['\\[','\\]'], ['$$','$$']],
+        processEscapes: true,
+        packages: {'[+]': ['noerrors']}
+      },
+      options: {
+        renderActions: {
+          addMenu: []
+        }
+      },
+      svg: { fontCache: 'global' }
+    };
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js" defer></script>
 </head>
 <body>
   <div class="wrap">
     <header>
       <div class="tag">Gravity • Free-Air & Bouguer Anomaly</div>
       <h1 class="title">重力異常計算教學：理論重力、自由空間改正與布格改正</h1>
-      <p class="sub">根據題目（φ=48.1195°N、λ=12.1878°E、h=487.9 m、g<sub>obs</sub>=980,717.39 mGal），示範(a)陸地站與(b)海面站（同觀測值、海深=487.9 m）之完整解題流程。附可複製 Python 程式碼。</p>
+      <p class="sub">根據題目（\( \phi=48.1195^\circ \mathrm{N} \)、\( \lambda=12.1878^\circ \mathrm{E} \)、\( h=487.9 \,\mathrm{m} \)、\( g_{\mathrm{obs}}=980{,}717.39\,\mathrm{mGal} \)），示範 (a) 陸地站與 (b) 海面站（同觀測值、水深 \(H=487.9\ \mathrm{m}\)）的完整解題流程。附可複製 Python 程式碼。</p>
     </header>
 
     <main>
@@ -79,63 +144,83 @@
         <section id="data" class="card">
           <h2>1. 題目資料</h2>
           <ul>
-            <li>緯度 φ = <b>48.1195° N</b>；經度 λ = 12.1878° E（本題計算不使用）</li>
-            <li>高程 h = <b>487.9 m</b></li>
-            <li>實測重力 \( g_\text{obs} \) = <b>980,717.39 mGal</b></li>
+            <li>緯度 \( \phi = \mathbf{48.1195^\circ N} \)；經度 \( \lambda = 12.1878^\circ \mathrm{E} \)（本題計算不使用）</li>
+            <li>高程 \( h = \mathbf{487.9\ m} \)</li>
+            <li>實測重力 \( g_\text{obs} = \mathbf{980{,}717.39\ mGal} \)</li>
           </ul>
           <div class="grid3">
-            <div class="kpi"><div class="n">單位換算</div><div>1 m/s² = 10⁵ mGal</div></div>
-            <div class="kpi"><div class="n">海面案例</div><div>海面 h=0，水深 H 用於海域布格改正</div></div>
+            <div class="kpi"><div class="n">單位換算</div><div class="units">1 m/s² = 10⁵ mGal</div></div>
+            <div class="kpi"><div class="n">海面案例</div><div>海面 \(h=0\)，水深 \(H\) 用於海域布格改正</div></div>
             <div class="kpi"><div class="n">忽略項</div><div>此示例忽略地形、潮汐、埃特沃什等細部改正</div></div>
           </div>
         </section>
 
         <section id="formula" class="card">
           <h2>2. 公式與常數</h2>
-          <ol>
-            <li><b>理論重力（近似 GRS80 緯度公式）</b><br>
-              \( g_\text{th}(\phi)=9.780327\,[1+0.0053024\sin^2\phi-0.0000058\sin^22\phi]\ \text{m/s}^2 \)
+
+          <h3>理論重力（近似 GRS80 緯度公式）</h3>
+          <div class="eq center">
+            \[
+              g_\mathrm{th}(\phi)=9.780327\left(1+0.0053024\,\sin^2\phi-0.0000058\,\sin^2(2\phi)\right)\ \mathrm{m\,s^{-2}}
+            \]
+          </div>
+          <p class="units">輸出若需 mGal：\( g_\mathrm{th}[\mathrm{mGal}] = g_\mathrm{th}[\mathrm{m\,s^{-2}}]\times 10^5 \)。</p>
+
+          <h3>自由空間改正（FAC）</h3>
+          <div class="eq center">
+            \[
+              \mathrm{FAC}=0.3086\ \mathrm{\tfrac{mGal}{m}}\times h
+              \;=\;0.3086\,h\ \mathrm{mGal}
+            \]
+          </div>
+
+          <h3>布格改正（Bouguer, 平板近似）</h3>
+          <div class="eq center">
+            \[
+              \mathrm{BC}=2\pi G\rho h\ \approx\ 0.04193\,\rho\,h\ \mathrm{mGal}
+            \]
+          </div>
+          <ul>
+            <li>陸域用岩石密度 \( \rho_r=2.67\ \mathrm{g\,cm^{-3}} \)（\(\mathrm{BC}>0\)，在異常中被扣除）。</li>
+            <li>海域用海水密度 \( \rho_w=1.03\ \mathrm{g\,cm^{-3}} \)，且取 <b>負號</b>：
+              <span class="eq">\(\mathrm{BC}_{\text{marine}}=-0.04193\,\rho_w\,H\).</span>
             </li>
-            <li><b>自由空間改正（FAC）</b><br>
-              \( \mathrm{FAC}=0.3086\,\mathrm{mGal/m}\times h \)
-            </li>
-            <li><b>布格改正（BC，平板）</b><br>
-              \( \mathrm{BC}=2\pi G\rho h \approx 0.04193\,\rho\,h\ \mathrm{mGal} \)<br>
-              陸域岩石密度 \( \rho_r=2.67\ \text{g/cm}^3 \)；海域水密度 \( \rho_w=1.03\ \text{g/cm}^3 \)。<br>
-              海域布格改正取 <b>負號</b>：\( \mathrm{BC}_{marine} = -0.04193\,\rho_w\,H \)。
-            </li>
-            <li><b>異常定義</b><br>
-              \( \Delta g_\mathrm{FA}=g_\mathrm{obs}-g_\mathrm{th}+\mathrm{FAC} \)<br>
-              \( \Delta g_\mathrm{B}=\Delta g_\mathrm{FA}-\mathrm{BC} \)
-            </li>
-          </ol>
-          <p class="callout">直覺：上升到高處 → FAC 為正（需加回）；陸地 BC 為正但在異常中被扣除；海面無 FAC，且 BC 為負值（代入等於加上一個正值）。</p>
+          </ul>
+
+          <h3>異常定義</h3>
+          <div class="eq center">
+            \[
+              \Delta g_\mathrm{FA}=g_\mathrm{obs}-g_\mathrm{th}+\mathrm{FAC},\qquad
+              \Delta g_\mathrm{B}=\Delta g_\mathrm{FA}-\mathrm{BC}.
+            \]
+          </div>
+          <p class="callout">直覺：上到高處 → FAC 為正（需加回）；陸地 BC 為正但在異常中被扣除；海面無 FAC，且 BC 為負值（代入等於加上一個正值）。</p>
         </section>
 
         <section id="steps" class="card">
           <h2>3. 解題步驟</h2>
           <ol>
-            <li>由緯度用式(1)算 \( g_\text{th} \)（轉 mGal）。</li>
-            <li>陸地：以 h=487.9 m 代入式(2)得 FAC；以 ρ=2.67、h=487.9 m 代入式(3)得 BC。</li>
-            <li>海面：h=0 ⇒ FAC=0；以 ρ<sub>w</sub>=1.03、H=487.9 m 進式(3)（<b>加負號</b>）得 \( \mathrm{BC}_{marine} \)。</li>
-            <li>分別帶入式(4)得到自由空間與布格異常。</li>
+            <li>由緯度帶入上式得 \( g_\mathrm{th} \)（轉 mGal）。</li>
+            <li>陸地：以 \(h=487.9\) m 算 FAC；以 \( \rho=2.67\) 算 BC。</li>
+            <li>海面：\(h=0\Rightarrow \mathrm{FAC}=0\)；以 \( \rho_w=1.03\)、\(H=487.9\ \mathrm{m}\) 算 \( \mathrm{BC}_{marine} \)（負號）。</li>
+            <li>代入定義求 \( \Delta g_\mathrm{FA} \) 與 \( \Delta g_\mathrm{B} \)。</li>
           </ol>
         </section>
 
         <section id="ans" class="card">
           <h2>4. (a)(b) 數值解答（四捨五入至 0.01 mGal）</h2>
-          <h3>(a) 陸地站（h = 487.9 m）</h3>
+          <h3>(a) 陸地站（\(h = 487.9\,\mathrm{m}\)）</h3>
           <ul>
-            <li>理論重力 \(g_\text{th}\) = <b>980,901.85</b> mGal</li>
-            <li>FAC = <b>150.57</b> mGal； BC (ρ=2.67) = <b>54.62</b> mGal</li>
-            <li>自由空間異常 \( \Delta g_\mathrm{FA} \) = <b>−33.89</b> mGal</li>
-            <li>布格異常 \( \Delta g_\mathrm{B} \) = <b>−88.51</b> mGal</li>
+            <li>\(g_\mathrm{th}= \mathbf{980{,}901.85}\ \mathrm{mGal}\)</li>
+            <li>\(\mathrm{FAC}=\mathbf{150.57}\ \mathrm{mGal}\)、\(\mathrm{BC}(\rho=2.67)=\mathbf{54.62}\ \mathrm{mGal}\)</li>
+            <li>\(\Delta g_\mathrm{FA}=\mathbf{-33.89}\ \mathrm{mGal}\)</li>
+            <li>\(\Delta g_\mathrm{B}=\mathbf{-88.51}\ \mathrm{mGal}\)</li>
           </ul>
-          <h3>(b) 海面（同觀測值，水深 H = 487.9 m）</h3>
+          <h3>(b) 海面（同觀測值，\(H = 487.9\,\mathrm{m}\)）</h3>
           <ul>
-            <li>FAC = 0 → \( \Delta g_\mathrm{FA}=g_\mathrm{obs}-g_\mathrm{th} \) = <b>−184.46</b> mGal</li>
-            <li>海域布格改正 \( \mathrm{BC}_{marine} \) = <b>−21.07</b> mGal</li>
-            <li>布格異常 \( \Delta g_\mathrm{B} \) = <b>−163.39</b> mGal</li>
+            <li>\(\mathrm{FAC}=0\Rightarrow \Delta g_\mathrm{FA}=g_\mathrm{obs}-g_\mathrm{th}=\mathbf{-184.46}\ \mathrm{mGal}\)</li>
+            <li>\(\mathrm{BC}_{marine}=\mathbf{-21.07}\ \mathrm{mGal}\)</li>
+            <li>\(\Delta g_\mathrm{B}=\mathbf{-163.39}\ \mathrm{mGal}\)</li>
           </ul>
         </section>
 
@@ -193,15 +278,15 @@ print("\n=== (b) 海面（水深 = 487.9 m） ===")
 pr("Free-air anomaly", dg_FA_sea)
 pr("Marine Bouguer corr.", BC_marine)  # 注意為負值
 pr("Bouguer anomaly", dg_B_sea)</code></pre>
-          <p class="callout">需要把常數做成可輸入、或加入地形/潮汐/埃特沃什改正的版本，我可以再幫你升級成互動式計算器。</p>
+          <p class="callout">需要把常數做成可輸入、或加入地形/潮汐/埃特沃什改正的版本，我可以再幫你升級成互動式計算器（前端即時計算）。</p>
         </section>
 
         <section id="notes" class="card">
           <h2>6. 備註與延伸</h2>
           <ul>
-            <li>單位：程式輸出皆為 mGal。若需 m/s²，除以 10⁵ 即可。</li>
-            <li>陸地布格改正用教科書常見的 <code>ρ=2.67 g/cm³</code>；實務可換成本地密度。</li>
-            <li>完整布格異常還需地形改正（TC）與其他改正項。</li>
+            <li>單位：程式輸出皆為 mGal。若需 m/s²，除以 \(10^5\)。</li>
+            <li>陸地布格改正採教科書常用 \( \rho=2.67\ \mathrm{g\,cm^{-3}} \)；實務可換成本地密度。</li>
+            <li>完整布格異常通常還會加上地形改正（TC）與其他小改正項。</li>
           </ul>
         </section>
 
@@ -210,28 +295,23 @@ pr("Bouguer anomaly", dg_B_sea)</code></pre>
     </main>
   </div>
 
-  <!-- Prism.js syntax highlight -->
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/themes/prism-tomorrow.min.css">
-  <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-core.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/plugins/autoloader/prism-autoloader.min.js"
-          data-autoloader-path="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/"></script>
-
   <script>
-    // Copy buttons
+    // Copy buttons（僅複製程式碼，避免影響公式）
     document.addEventListener('click', async (e)=>{
       if(!e.target.classList.contains('copy')) return;
       const code = e.target.nextElementSibling?.innerText || '';
       try{
         await navigator.clipboard.writeText(code);
         const b=e.target, old=b.textContent;
-        b.textContent='已複製！'; b.style.background='linear-gradient(135deg,var(--good),#b8f7c7)'; b.style.color='#07120a';
+        b.textContent='已複製！';
+        b.style.background='linear-gradient(135deg,var(--good),#b8f7c7)'; b.style.color='#07120a';
         setTimeout(()=>{b.textContent=old; b.removeAttribute('style');}, 1200);
       }catch(err){
         e.target.textContent='無法複製';
       }
     });
 
-    // TOC highlight by scroll
+    // TOC active highlight
     const sections=[...document.querySelectorAll('section.card')];
     const links=[...document.querySelectorAll('.toc a')];
     const map=new Map(sections.map(s=>[s.id,links.find(a=>a.getAttribute('href')==='#'+s.id)]));
